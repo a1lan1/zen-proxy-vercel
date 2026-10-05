@@ -12,7 +12,7 @@ This fork adds a Vercel entrypoint: `api/index.mjs` + `vercel.json`.
 | `FALLBACK_MODELS` | Optional | JSON array; shipped defaults work if omitted. |
 | `TRUST_FORWARDED` | Optional | Leave **unset/0** if you want each deploy’s own egress IP for opencode quotas. |
 | `AUTO_SYNC` | Optional | Default **off** on Vercel (`VERCEL=1`). Set `AUTO_SYNC=1` to probe models on cold starts (slow). |
-| `TIMEOUT_MS` | Optional | Default 120000; Vercel `maxDuration` in `api/index.mjs` is 60s on Hobby — align if needed. |
+| `TIMEOUT_MS` | Optional | Default 120000; `maxDuration` is **300s** (Pro). Hobby caps at 60s regardless of config. |
 
 `VERCEL=1` enables serverless mode: no persistent `zen-proxy.json`; dashboard edits apply only to the current invocation.
 
