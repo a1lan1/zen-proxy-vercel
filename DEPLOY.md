@@ -12,7 +12,7 @@ Fork entrypoint: **`api/index.mjs`** + **`vercel.json`** (rewrite всех пу�
 - **`VERCEL=1`** (ставится автоматически) включает **serverless-режим**:
   - конфиг только из **переменных окружения** (файл `zen-proxy.json` не читается/не пишется);
   - изменения через дашборд **`PUT /api/config`** живут только до конца текущего invocation;
-  - **auto-sync** моделей по умолчанию **выключен** (cold start + много probe-запросов).
+  - **auto-sync** и **auto-UA** по умолчанию **выключены** (cold start + лишние запросы); включить: `AUTO_SYNC=1`, `AUTO_UA=1`.
 
 ---
 
@@ -23,7 +23,7 @@ Fork entrypoint: **`api/index.mjs`** + **`vercel.json`** (rewrite всех пу�
 | `PROXY_KEY` | **Да** (для production) | Bearer для orchestrator. Закрывает `/v1/*`, `/`, `/api/*`. **`/health` открыт.** |
 | `ZEN_KEY` | Optional | BYOK: default `Authorization` к opencode вместо `public`. |
 | `ZEN_UA` | Optional | Default `opencode/1.18.30`. |
-| `AUTO_UA` | Optional | `1` — подтягивать версию opencode с npm (может писать в in-memory config). |
+| `AUTO_UA` | Optional | На Vercel default **off**. `AUTO_UA=1` — подтягивать версию opencode с npm (in-memory). |
 | `INJECT_SESSION` | Optional | `0` — не генерировать `x-opencode-session` (обычно оставить включённым). |
 | `FALLBACK_MODELS` | Optional | JSON-массив id моделей; иначе встроенный список. |
 | `MODEL_ALIASES` | Optional | JSON object. |

@@ -17,7 +17,7 @@ const DEFAULT_CONFIG = {
   port: Number(ENV.PORT ?? 8787),
   upstream: (ENV.ZEN_URL ?? "https://opencode.ai/zen/v1").replace(/\/+$/, ""),
   ua: ENV.ZEN_UA ?? "opencode/1.18.30",
-  autoUA: ENV.AUTO_UA !== "0",
+  autoUA: isServerless ? ENV.AUTO_UA === "1" : ENV.AUTO_UA !== "0",
   uaRefreshMs: Number(ENV.UA_REFRESH_MS ?? 6 * 3600_000),
   injectSession: ENV.INJECT_SESSION !== "0",
   // Which credentials the auto-sync health probe uses:
