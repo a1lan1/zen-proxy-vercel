@@ -6,10 +6,11 @@ import { randomBytes } from "node:crypto"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
-const CONFIG_PATH = process.env.ZEN_PROXY_CONFIG || path.join(__dirname, "zen-proxy.json")
-const UI_PATH = path.join(__dirname, "public", "index.html")
 const ENV = process.env
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+const isServerless = ENV.VERCEL === "1" || ENV.ZEN_SERVERLESS === "1"
+const CONFIG_PATH = ENV.ZEN_PROXY_CONFIG || path.join(__dirname, "zen-proxy.json")
+const UI_PATH = path.join(__dirname, "public", "index.html")
 
 const DEFAULT_CONFIG = {
   host: ENV.HOST ?? "127.0.0.1",
@@ -61,11 +62,12 @@ const DEFAULT_CONFIG = {
   trustForwarded: ENV.TRUST_FORWARDED === "1",
   timeoutMs: Number(ENV.TIMEOUT_MS ?? 120000),
   cacheMs: Number(ENV.CACHE_MS ?? 30000),
-  autoSync: ENV.AUTO_SYNC !== "0",
+  autoSync: isServerless ? ENV.AUTO_SYNC === "1" : ENV.AUTO_SYNC !== "0",
   autoSyncIntervalMs: Number(ENV.AUTO_SYNC_MS ?? 3600000),
 }
 
 function loadConfig() {
+  if (isServerless) return { ...DEFAULT_CONFIG }
   try {
     const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"))
     return { ...DEFAULT_CONFIG, ...raw }
@@ -101,9 +103,10 @@ if (isMain) {
 
 function saveConfig(next) {
   const merged = { ...config, ...next }
+  config = merged
+  if (isServerless) return merged
   fs.writeFileSync(CONFIG_PATH + ".tmp", JSON.stringify(merged, null, 2))
   fs.renameSync(CONFIG_PATH + ".tmp", CONFIG_PATH)
-  config = merged
   return merged
 }
 
@@ -135,9 +138,28 @@ const sessionPool = new Map()
 function genSessionId() {
   return "ses_" + randomBytes(13).toString("hex")
 }
+function clientSessionKey(req) {
+  if (!req?.headers) return ""
+  for (const h of ["x-zen-client-id", "x-opencode-client"]) {
+    const v = req.headers[h]
+    if (typeof v === "string" && v.trim()) return v.trim()
+  }
+  return ""
+}
+
 function sessionFor(req) {
   const incoming = req?.headers?.["x-opencode-session"]
   if (typeof incoming === "string" && incoming.trim()) return { value: incoming.trim(), injected: false }
+  const clientKey = clientSessionKey(req)
+  if (clientKey) {
+    const poolKey = `client:${clientKey}`
+    let id = sessionPool.get(poolKey)
+    if (!id) {
+      id = genSessionId()
+      sessionPool.set(poolKey, id)
+    }
+    return { value: id, injected: true }
+  }
   const key = req ? (ipOmit(clientIp(req)) ? "local" : clientIp(req)) : "server"
   let id = sessionPool.get(key)
   if (!id) {
@@ -1333,6 +1355,7 @@ if (isMain) {
 
 export {
   isMain,
+  isServerless,
   config,
   loadConfig,
   saveConfig,
@@ -1374,6 +1397,7 @@ export {
   parseRetryAfter,
   retryableUpstream,
   toBool,
+  clientSessionKey,
   sessionFor,
   sessionHeader,
   MAX_BODY,

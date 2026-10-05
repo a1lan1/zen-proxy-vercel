@@ -265,6 +265,14 @@ describe("session injection", () => {
     assert.equal(h["x-opencode-session"], undefined)
   })
 
+  test("sessionFor is stable per x-zen-client-id", () => {
+    const h = { headers: { "x-zen-client-id": "opencode-main" } }
+    const a1 = zp.sessionFor(mockReq({ ...h, remoteAddress: "127.0.0.1" })).value
+    const a2 = zp.sessionFor(mockReq({ ...h, remoteAddress: "9.9.9.9" })).value
+    assert.equal(a1, a2)
+    assert.notEqual(a1, zp.sessionFor(mockReq({ headers: { "x-zen-client-id": "other" } })).value)
+  })
+
   test("sessionFor is stable per client and distinct across clients", () => {
     const a1 = zp.sessionFor(mockReq({ remoteAddress: "8.8.8.8" })).value
     const a2 = zp.sessionFor(mockReq({ remoteAddress: "8.8.8.8" })).value

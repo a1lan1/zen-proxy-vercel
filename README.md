@@ -58,6 +58,12 @@ The management UI runs on **`http://localhost:8787`** (or `http://127.0.0.1:8787
 
 ---
 
+## Vercel / serverless
+
+For remote deploys (Vercel, etc.) see **[DEPLOY.md](./DEPLOY.md)**. Pair with the local **[zen-orchestrator](../zen-orchestrator/)** for failover across multiple instances.
+
+---
+
 ## install
 
 Requires **Node.js ≥ 18**.
