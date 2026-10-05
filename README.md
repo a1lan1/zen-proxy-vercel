@@ -58,9 +58,23 @@ The management UI runs on **`http://localhost:8787`** (or `http://127.0.0.1:8787
 
 ---
 
-## Vercel / serverless
+## Vercel / serverless (zen-fly stack)
 
-For remote deploys (Vercel, etc.) see **[DEPLOY.md](./DEPLOY.md)**. Pair with the local **[zen-orchestrator](../zen-orchestrator/)** for failover across multiple instances.
+This directory is a **fork** prepared for remote deploy + local orchestrator:
+
+| Doc | Contents |
+|---|---|
+| **[../README.md](../README.md)** | Architecture, auth layers, quotas, troubleshooting |
+| **[DEPLOY.md](./DEPLOY.md)** | Env vars, `maxDuration` 300s, multi-instance, smoke tests |
+| **[../zen-orchestrator/README.md](../zen-orchestrator/README.md)** | Local `:4000` gateway, launchd, failover |
+
+**Serverless highlights:**
+
+- Entry: `api/index.mjs` → exported `router` from `zen-proxy.mjs`.
+- `VERCEL=1`: config from **env only**; dashboard saves are **not persistent** across invocations.
+- Set **`PROXY_KEY`**; point orchestrator `backends[].proxyKey` at the same value.
+- Keep **`TRUST_FORWARDED` off** on remote nodes so each deploy uses its own egress IP for opencode quotas.
+- Orchestrator sends **`x-zen-client-id`** so session injection works behind one Mac IP.
 
 ---
 
